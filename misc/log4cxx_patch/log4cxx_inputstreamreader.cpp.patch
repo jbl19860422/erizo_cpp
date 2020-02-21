@@ -1,0 +1,11 @@
+--- ./src/main/cpp/inputstreamreader.cpp	2014-01-02 18:17:05.000000000 +0800
++++ ./src/main/cpp/inputstreamreader.cpp.ok	2019-09-04 14:02:16.575206612 +0800
+@@ -14,7 +14,7 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+-
++#include <string.h>
+ #include <log4cxx/logstring.h>
+ #include <log4cxx/helpers/inputstreamreader.h>
+ #include <log4cxx/helpers/exception.h>

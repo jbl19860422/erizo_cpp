@@ -1,0 +1,59 @@
+#include "PacketSequencer.h"
+
+namespace erizo {
+DEFINE_LOGGER(PacketSequencer, "rtp.PacketSequencer");
+
+PacketSequencer::PacketSequencer(): packets_{kServicePacketBufferSize} {
+    max_seq_num_ = 0;
+}
+
+void PacketSequencer::insertPacket(std::shared_ptr<DataPacket> packet) {
+  RtpHeader *head = reinterpret_cast<RtpHeader*> (packet->data);
+  uint16_t seq_num = head->getSeqNumber();
+  if(expected_seq_num_ == 0) {
+      expected_seq_num_ = seq_num + 1;
+      packets_[getIndexInBuffer(seq_num)] = packet;
+  } else {
+      if(seq_num == expected_seq_num_) {
+          expected_seq_num_ = seq_num + 1;
+          packets_[getIndexInBuffer(seq_num)] = packet;
+      } else if (seq_num > expected_seq_num_) {
+          if((max_seq_num_ - expected_seq_num_) <= 5) {//如果超过5个，还没收到
+            packets_[getIndexInBuffer(seq_num)] = packet;
+          } else {//认为包丢了
+            for(int i = expected_seq_num_; i < max_seq_num_; i++) {//输出最小的那个包，然后重置
+                std::shared_ptr<DataPacket> min_packet = findPacket(i);
+                if(min_packet) {
+                    (*packet_cb_)(i, min_packet);
+                }
+            }
+            expected_seq_num_ = seq_num + 1;
+          }
+      } else {
+        
+      }
+  }
+
+  if(max_seq_num_ < seq_num) {
+      max_seq_num_ = seq_num;
+  }
+}
+
+std::shared_ptr<DataPacket> PacketSequencer::findPacket(uint16_t seq_num) {
+    std::shared_ptr<DataPacket> packet = packets_[getIndexInBuffer(seq_num)];
+    RtpHeader *head = reinterpret_cast<RtpHeader*> (packet->data);
+    if(head->getSeqNumber() == seq_num) {
+        return packet;
+    }
+    return nullptr;
+}
+
+std::shared_ptr<DataPacket> PacketSequencer::getPacket(uint16_t seq_num) {
+  return packets_[getIndexInBuffer(seq_num)];
+}
+
+uint16_t PacketSequencer::getIndexInBuffer(uint16_t seq_num) {
+  return seq_num % kServicePacketBufferSize;
+}
+
+}  // namespace erizo

@@ -1,0 +1,11 @@
+--- ./src/examples/cpp/console.cpp	2014-01-02 18:17:05.000000000 +0800
++++ ./src/examples/cpp/console.cpp.ok	2019-09-04 14:00:34.594212486 +0800
+@@ -14,7 +14,7 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+-
++#include <string.h>
+ #include <stdlib.h>
+ #include <log4cxx/logger.h>
+ #include <log4cxx/consoleappender.h>

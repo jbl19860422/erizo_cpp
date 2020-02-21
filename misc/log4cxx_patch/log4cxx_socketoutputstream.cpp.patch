@@ -1,0 +1,11 @@
+--- ./src/main/cpp/socketoutputstream.cpp	2014-01-02 18:17:05.000000000 +0800
++++ ./src/main/cpp/socketoutputstream.cpp.ok	2019-09-04 14:03:34.735956327 +0800
+@@ -14,7 +14,7 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
+-
++#include <string.h>
+ #include <log4cxx/logstring.h>
+ #include <log4cxx/helpers/socketoutputstream.h>
+ #include <log4cxx/helpers/socket.h>

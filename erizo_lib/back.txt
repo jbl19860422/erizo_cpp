@@ -1,0 +1,4 @@
+ ${GLIB_LIBRARIES} ${Boost_LIBRARIES} ${SRTP} ${NICE} ${SSL} ${CRYPTO} ${GTHREAD} ${EVENT} ${LIBS} ${LOG} ${RABBITMQ} webrtc webrtcall nrappkit mp4v2 jsoncpp avcodec swresample
+
+
+ -D_GLIBCXX_USE_CXX11_ABI=0 

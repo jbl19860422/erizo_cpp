@@ -1,0 +1,13 @@
+--- /home/jiangbaolin/licode/erizo/build/include/libavutil/common.h	2019-09-04 19:08:37.070763450 +0800
++++ /home/jiangbaolin/licode/erizo/build/include/libavutil/common.h.ok	2019-09-04 19:12:46.869731243 +0800
+@@ -25,6 +25,10 @@
+ 
+ #ifndef AVUTIL_COMMON_H
+ #define AVUTIL_COMMON_H
++#ifndef INT64_C 
++#define INT64_C(c) (c ## LL)  
++#define UINT64_C(c) (c ## ULL)  
++#endif
+ 
+ #if defined(__cplusplus) && !defined(__STDC_CONSTANT_MACROS) && !defined(UINT64_C)
+ #error missing -D__STDC_CONSTANT_MACROS / #define __STDC_CONSTANT_MACROS

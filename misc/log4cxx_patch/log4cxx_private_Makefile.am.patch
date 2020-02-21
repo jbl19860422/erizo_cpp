@@ -1,0 +1,11 @@
+--- src/main/include/log4cxx/private/Makefile.am	2014-01-02 18:17:05.000000000 +0800
++++ src/main/include/log4cxx/private/Makefile.am.ok	2019-09-04 14:13:47.932540464 +0800
+@@ -14,7 +14,7 @@
+ # limitations under the License.
+ #
+ privateincdir = $(includedir)/log4cxx/private
+-privateinc_HEADERS= $(top_builddir)/src/main/include/log4cxx/private/*.h log4cxx_private.h
++privateinc_HEADERS= $(top_builddir)/src/main/include/log4cxx/private/*.h
+ DISTCLEANFILES = log4cxx_private.h
+ EXTRA_DIST = log4cxx_private.hw
+ 
