@@ -147,8 +147,11 @@ void BridgeIO::onRecv(char *data, int length)
 {
     std::string stream_id(data, STREAM_ID_LEN);
     std::shared_ptr<BridgeMediaStream> stream = getStream(stream_id);
-    if (stream == nullptr)
+    if (stream == nullptr) {
+        ELOG_ERROR("**************** bridge recv unknown stream_id:%s ****************", stream_id);
         return;
+    }
+        
     stream->onRead(std::make_shared<DataPacket>(1, data, length, OTHER_PACKET));
 }
 

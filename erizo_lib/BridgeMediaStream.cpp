@@ -254,6 +254,7 @@ void BridgeMediaStream::write(std::shared_ptr<DataPacket> data_packet)
 {
     std::shared_ptr<DataPacket> bridge_packet = addBridgeHeader(std::move(data_packet));
     if (bridge_packet != nullptr) {
+        // ELOG_ERROR("=================== bridge send port=%d =============================", port_);
         BridgeIO::getInstance()->onSend(ip_, port_, stream_id_, bridge_packet);
     }
 }

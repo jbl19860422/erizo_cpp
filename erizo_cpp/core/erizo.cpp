@@ -181,28 +181,6 @@ int Erizo::init(const std::string &agent_id, const std::string &erizo_id, const 
 
 void Erizo::addSubscriber(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 5)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue ||
-    //     args[2].type() != Json::stringValue ||
-    //     args[3].type() != Json::stringValue ||
-    //     args[4].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    ELOG_ERROR("********************************* addSubscriber %s********************************", Utils::dumpJson(root));
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "room_id", String);
     CHECK_RETURN_ON_FAIL(root, "id", String);
@@ -212,7 +190,6 @@ void Erizo::addSubscriber(const Json::Value &root)
     CHECK_RETURN_ON_FAIL(root, "subscribe_to", String);
     CHECK_RETURN_ON_FAIL(root, "label", String);
     CHECK_RETURN_ON_FAIL(root, "reply_to", String);
-    ELOG_ERROR("********************************* addSubscriber 1111********************************");
     int64_t appid = root["appid"].asInt64();
     std::string room_id = root["room_id"].asString();
     std::string id = root["id"].asString();
@@ -222,11 +199,6 @@ void Erizo::addSubscriber(const Json::Value &root)
     std::string reply_to = root["reply_to"].asString();
     bool is_bridge = root["is_bridge"].asBool();
     std::string bridge_id = root["bridge_id"].asString();
-    // std::string client_id = args[0].asString();
-    // std::string stream_id = args[1].asString();
-    // std::string stream_label = args[2].asString();
-    // std::string reply_to = args[3].asString();
-    // std::string isp = args[4].asString();
     std::string isp;
     std::shared_ptr<Client> client = getOrCreateClient(client_id);
     std::shared_ptr<Connection> pub_conn = getPublishConn(subscribe_to);
@@ -277,26 +249,6 @@ void Erizo::addSubscriber(const Json::Value &root)
 
 void Erizo::removeSubscriber(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 2)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // std::string client_id = args[0].asString();
-    // std::string stream_id = args[1].asString();
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "room_id", String);
     CHECK_RETURN_ON_FAIL(root, "client_id", String);
@@ -314,7 +266,6 @@ void Erizo::removeSubscriber(const Json::Value &root)
     bool is_bridge = root["is_bridge"].asBool();
     std::string bridge_id = root["bridge_id"].asString();
     // std::string reply_to = root["reply_to"].asString();
-    ELOG_ERROR("******************* removeSubscriber:%s ********************", Utils::dumpJson(root));
     std::shared_ptr<Connection> pub_conn = getPublishConn(subscribe_to);
     if (pub_conn != nullptr)
         pub_conn->removeSubscriber(client_id);
@@ -332,15 +283,7 @@ void Erizo::removeSubscriber(const Json::Value &root)
         {
             removeClient(client->id);
         }
-        else
-        {
-            ELOG_ERROR("******************* removeSubscriber could not remove ************************");
-        }
         sub_conn->close();
-    }
-    else
-    {
-        ELOG_ERROR("******************* removeSubscriber subconn null ************************");
     }
 
     if(canExit())
@@ -351,33 +294,13 @@ void Erizo::removeSubscriber(const Json::Value &root)
 
 void Erizo::addMixer(const Json::Value &root)
 {
-    if (!root.isMember("args") ||
-        root["args"].type() != Json::arrayValue)
-    {
-        ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
-    if (root["args"].size() < 2)
-    {
-        ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
-
-    Json::Value args = root["args"];
-    if (args[0].type() != Json::objectValue ||
-        args[1].type() != Json::stringValue)
-    {
-        ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
-
-    std::string reply_to = args[1].asString();
+    //这里漏了检测了
     Mixer mixer;
-    if (0 != Mixer::fromJSON(args[0], mixer))
-    {
-        ELOG_ERROR("json parse mixer failed,dump %s", Utils::dumpJson(root));
+    int ret = Mixer::fromJSON(root, mixer);
+    if(0 != ret) {
         return;
     }
+
     std::shared_ptr<erizo::StreamMixer> stream_mixer = std::make_shared<erizo::StreamMixer>();
     for (auto &layer : mixer.layers)
     {
@@ -385,7 +308,6 @@ void Erizo::addMixer(const Json::Value &root)
         std::string src_stream_id = layer.bridge_stream.src_stream_id;
         std::string ip = layer.bridge_stream.sender_ip;
         uint16_t port = layer.bridge_stream.sender_port;
-
         std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_stream_id);
         if (bridge_conn == nullptr)
         {
@@ -491,6 +413,7 @@ void Erizo::removeMixerLayer(const Json::Value &root)
 
     std::string reply_to = args[2].asString();
     std::string mixer_id = args[0].asString();
+    
     Layer layer;
     Json::Value j_layer = args[1];
     if (!j_layer.isMember("stream_id") || !j_layer["stream_id"].isString() ||
@@ -556,29 +479,38 @@ void Erizo::removeMixerLayer(const Json::Value &root)
 
 void Erizo::removeMixer(const Json::Value &root)
 {
-    if (!root.isMember("args") ||
-        root["args"].type() != Json::arrayValue)
-    {
-        ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
-    if (root["args"].size() < 2)
-    {
-        ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
+    // if (!root.isMember("args") ||
+    //     root["args"].type() != Json::arrayValue)
+    // {
+    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
+    //     return;
+    // }
+    // if (root["args"].size() < 2)
+    // {
+    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
+    //     return;
+    // }
 
-    Json::Value args = root["args"];
-    if (args[0].type() != Json::objectValue ||
-        args[1].type() != Json::stringValue)
-    {
-        ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-        return;
-    }
+    // Json::Value args = root["args"];
+    // if (args[0].type() != Json::objectValue ||
+    //     args[1].type() != Json::stringValue)
+    // {
+    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
+    //     return;
+    // }
 
-    std::string reply_to = args[1].asString();
+    // std::string reply_to = args[1].asString();
+
+    // CHECK_RETURN_ON_FAIL(root, "appid", Int64);
+    // CHECK_RETURN_ON_FAIL(root, "room_id", String);
+    // CHECK_RETURN_ON_FAIL(root, "client_id", String);
+    // CHECK_RETURN_ON_FAIL(root, "id", String);
+    // CHECK_RETURN_ON_FAIL(root, "subscribe_to", String);
+    // CHECK_RETURN_ON_FAIL(root, "is_bridge", Bool);
+    // CHECK_RETURN_ON_FAIL(root, "bridge_id", String);
+    
     Mixer mixer;
-    if (0 != Mixer::fromJSON(args[0], mixer))
+    if (0 != Mixer::fromJSON(root, mixer))
     {
         ELOG_ERROR("json parse mixer failed,dump %s", Utils::dumpJson(root));
         return;
@@ -618,7 +550,12 @@ void Erizo::removeMixer(const Json::Value &root)
         stream_mixer->close();
         client->mixers.erase(mixer.id);
     }
-    removeClient(client_id);
+
+    if (client->canRemove())
+    {
+        removeClient(client->id);
+    }
+
     if(canExit())
     {
         quit();
@@ -627,28 +564,6 @@ void Erizo::removeMixer(const Json::Value &root)
 
 void Erizo::addPublisher(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 6)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue ||
-    //     args[2].type() != Json::stringValue ||
-    //     args[3].type() != Json::stringValue ||
-    //     args[4].type() != Json::stringValue ||
-    //     args[5].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "room_id", String);
     CHECK_RETURN_ON_FAIL(root, "client_id", String);
@@ -674,29 +589,6 @@ void Erizo::addPublisher(const Json::Value &root)
 
 void Erizo::addVirtualPublisher(const Json::Value &root)
 {
-    // ELOG_ERROR("addVirtualPublisher args=%s", root.toStyledString().c_str());
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 6)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue ||
-    //     args[2].type() != Json::stringValue ||
-    //     args[3].type() != Json::intValue)
-    // {
-    //     ELOG_ERROR("json parse args type feiled,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "id", String);
     CHECK_RETURN_ON_FAIL(root, "srcStreamId", String);
@@ -713,13 +605,6 @@ void Erizo::addVirtualPublisher(const Json::Value &root)
     uint32_t video_ssrc = root["videoSSRC"].asUInt();
     uint32_t audio_ssrc = root["audioSSRC"].asUInt();
 
-    // std::string bridge_stream_id = args[0].asString();
-    // std::string src_stream_id = args[1].asString();
-    // std::string ip = args[2].asString();
-    // uint16_t port = args[3].asInt();
-    // uint32_t video_ssrc = args[4].asUInt();
-    // uint32_t audio_ssrc = args[5].asUInt();
-
     std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_id);
     if (bridge_conn == nullptr)
     {
@@ -731,26 +616,6 @@ void Erizo::addVirtualPublisher(const Json::Value &root)
 
 void Erizo::removeVirtualPublisher(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 1)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // std::string src_stream_id = args[0].asString();
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "roomId", String);
     CHECK_RETURN_ON_FAIL(root, "srcStreamId", String);
@@ -761,17 +626,6 @@ void Erizo::removeVirtualPublisher(const Json::Value &root)
     std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_id);
     if (bridge_conn != nullptr)
     {
-        std::vector<std::shared_ptr<Client>> sub_clients = getSubscribers(src_stream_id);
-        for (std::shared_ptr<Client> sub_client : sub_clients)
-        {
-            std::shared_ptr<Connection> sub_conn = getSubscribeConn(sub_client, src_stream_id);
-            if (sub_conn != nullptr)
-            {
-                sub_client->subscribers.erase(src_stream_id);
-                sub_conn->close();
-            }
-        }
-
         bridge_conns_.erase(bridge_id);
         bridge_conn->close();
     }
@@ -779,34 +633,6 @@ void Erizo::removeVirtualPublisher(const Json::Value &root)
 
 void Erizo::addVirtualSubscriber(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 4)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue ||
-    //     args[2].type() != Json::stringValue ||
-    //     args[3].type() != Json::intValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // std::string bridge_stream_id = args[0].asString();
-    // std::string src_stream_id = args[1].asString();
-    // std::string ip = args[2].asString();
-    // uint16_t port = args[3].asInt();
-    // ELOG_ERROR("addVirtualSubscriber args=%s", root.toStyledString().c_str());
-    // ELOG_ERROR("addVirtualSubscriber start");
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "id", String);
     CHECK_RETURN_ON_FAIL(root, "srcStreamId", String);
@@ -852,29 +678,6 @@ void Erizo::addVirtualSubscriber(const Json::Value &root)
 
 void Erizo::removeVirtualSubscriber(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 2)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // std::string bridge_stream_id = args[0].asString();
-    // std::string src_stream_id = args[1].asString();
-
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "roomId", String);
     CHECK_RETURN_ON_FAIL(root, "srcStreamId", String);
@@ -897,27 +700,6 @@ void Erizo::removeVirtualSubscriber(const Json::Value &root)
 
 void Erizo::removePublisher(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 2)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::stringValue ||
-    //     args[1].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // std::string client_id = args[0].asString();
-    // std::string stream_id = args[1].asString();
     CHECK_RETURN_ON_FAIL(root, "appid", Int64);
     CHECK_RETURN_ON_FAIL(root, "room_id", String);
     CHECK_RETURN_ON_FAIL(root, "client_id", String);
@@ -968,39 +750,19 @@ void Erizo::removePublisher(const Json::Value &root)
 
 int Erizo::addRecorder(const Json::Value &root)
 {
-    // if (!root.isMember("args") || root["args"].type() != Json::arrayValue) {
-    //     return Json::nullValue;
-    // }
-
-    // if(root["args"].size() < 4) {
-    //     return Json::nullValue;
-    // }
-
-    // Json::Value args = root["args"];
-    // std::string room_id = args[0].asString();
-    // std::string stream_id = args[1].asString();
-    // std::string str_types = args[2].asString();
-    // Json::Reader reader;
-    // Json::Value json_types;
-    // if(!reader.parse(str_types, json_types)) {
-    //     ELOG_ERROR("parse json error str_types=%s\n", str_types.c_str());
-    //     return Json::nullValue;
-    // }
-
-    // if(!json_types.isArray()) {
-    //     return Json::nullValue;
-    // }
     CHECK_RETURN_CODE_ON_FAIL(root, "appid", Int64, -1);
     CHECK_RETURN_CODE_ON_FAIL(root, "room_id", String, -2);
     CHECK_RETURN_CODE_ON_FAIL(root, "client_id", String, -3);
     CHECK_RETURN_CODE_ON_FAIL(root, "stream_id", String, -4);
     CHECK_RETURN_CODE_ON_FAIL(root, "record_types", Array, -5);
     CHECK_RETURN_CODE_ON_FAIL(root, "reply_to", String, -6);
+    CHECK_RETURN_CODE_ON_FAIL(root, "bridge_id", String, -7);
     int64_t appid = root["appid"].asInt64();
     std::string room_id = root["room_id"].asString();
     std::string client_id = "recorder_"+ root["client_id"].asString();
     std::string stream_id = root["stream_id"].asString();
     std::string reply_to = root["reply_to"].asString();
+    std::string bridge_id = root["bridge_id"].asString();
 
     Json::Value json_types = root["record_types"];
     std::vector<std::string> files;
@@ -1075,7 +837,7 @@ int Erizo::addRecorder(const Json::Value &root)
 
     external_output->init();
 
-    std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(stream_id);
+    std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_id);
     if (bridge_conn != nullptr)
     {
         if (bridge_conn->otm_processor_)
@@ -1084,14 +846,15 @@ int Erizo::addRecorder(const Json::Value &root)
         }
         else
         {
-            ELOG_ERROR("pub_conn's otm is null");
+            ELOG_ERROR("bridge_conn's otm is null");
         }
     }
     else
     {
-        ELOG_ERROR("pub_conn is null");
+        ELOG_ERROR("bridge_conn is null");
     }
 
+    client->recorders[stream_id] = external_output;
     // Json::Value data;
     // data["ret"] = 0;
     // return data;
@@ -1100,31 +863,20 @@ int Erizo::addRecorder(const Json::Value &root)
 
 int Erizo::removeRecorder(const Json::Value &root)
 {
-    // if (!root.isMember("args") || root["args"].type() != Json::arrayValue) {
-    //     return Json::nullValue;
-    // }
-
-    // if(root["args"].size() < 3) {
-    //     return Json::nullValue;
-    // }
-
-    // Json::Value args = root["args"];
-    // std::string room_id = args[0].asString();
-    // std::string stream_id = args[1].asString();
-    // std::string reply_to = args[2].asString();
-
     CHECK_RETURN_CODE_ON_FAIL(root, "appid", Int64, -1);
     CHECK_RETURN_CODE_ON_FAIL(root, "room_id", String, -2);
     CHECK_RETURN_CODE_ON_FAIL(root, "client_id", String, -3);
     CHECK_RETURN_CODE_ON_FAIL(root, "stream_id", String, -4);
-    CHECK_RETURN_CODE_ON_FAIL(root, "reply_to", String, -5);
+    // CHECK_RETURN_CODE_ON_FAIL(root, "reply_to", String, -5);
+    CHECK_RETURN_CODE_ON_FAIL(root, "bridge_id", String, -6);
     int64_t appid = root["appid"].asInt64();
     std::string room_id = root["room_id"].asString();
     std::string client_id = "recorder_" + root["client_id"].asString();
     std::string stream_id = root["stream_id"].asString();
-    std::string reply_to = root["reply_to"].asString();
+    // std::string reply_to = root["reply_to"].asString();
+    std::string bridge_id = root["bridge_id"].asString();
     std::shared_ptr<Client> client = getOrCreateClient(client_id);
-    std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(stream_id);
+    std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_id);
     if (bridge_conn != nullptr)
     {
         if (bridge_conn->otm_processor_)
@@ -1137,7 +889,8 @@ int Erizo::removeRecorder(const Json::Value &root)
             }
         }
 
-        if (client && client->canRemove())
+        client->recorders.erase(stream_id);
+        if (client->canRemove())
         {
             removeClient(client->id);
         }
@@ -1360,7 +1113,6 @@ std::shared_ptr<Client> Erizo::getOrCreateClient(const std::string &client_id)
     {
         clients_[client_id] = std::make_shared<Client>();
         clients_[client_id]->id = client_id;
-        ELOG_ERROR("*******************  create client:%s *******************", client_id);
     }
     return clients_[client_id];
 }

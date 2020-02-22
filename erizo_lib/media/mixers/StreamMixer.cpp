@@ -742,9 +742,9 @@ StreamMixer::~StreamMixer()
 
 int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
+    ELOG_ERROR("****************** streammixer deliverAudioData_ :%s *******************", stream_id);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
-        ELOG_ERROR("unknown stream_id:%s", stream_id.c_str());
         return 0;
     }
 
@@ -758,9 +758,9 @@ int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, cons
 
 int StreamMixer::deliverVideoData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
+    ELOG_ERROR("****************** streammixer deliverVideoData_ :%s *******************", stream_id);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
-        ELOG_ERROR("unknown stream_id:%s", stream_id.c_str());
         return 0;
     }
 
