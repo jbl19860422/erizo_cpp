@@ -479,36 +479,7 @@ void Erizo::removeMixerLayer(const Json::Value &root)
 
 void Erizo::removeMixer(const Json::Value &root)
 {
-    // if (!root.isMember("args") ||
-    //     root["args"].type() != Json::arrayValue)
-    // {
-    //     ELOG_ERROR("json parse args failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-    // if (root["args"].size() < 2)
-    // {
-    //     ELOG_ERROR("json parse args num failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // Json::Value args = root["args"];
-    // if (args[0].type() != Json::objectValue ||
-    //     args[1].type() != Json::stringValue)
-    // {
-    //     ELOG_ERROR("json parse args type failed,dump %s", Utils::dumpJson(root));
-    //     return;
-    // }
-
-    // std::string reply_to = args[1].asString();
-
-    // CHECK_RETURN_ON_FAIL(root, "appid", Int64);
-    // CHECK_RETURN_ON_FAIL(root, "room_id", String);
-    // CHECK_RETURN_ON_FAIL(root, "client_id", String);
-    // CHECK_RETURN_ON_FAIL(root, "id", String);
-    // CHECK_RETURN_ON_FAIL(root, "subscribe_to", String);
-    // CHECK_RETURN_ON_FAIL(root, "is_bridge", Bool);
-    // CHECK_RETURN_ON_FAIL(root, "bridge_id", String);
-    
+    ELOG_ERROR("*************** removeMixer %s *************", Utils::dumpJson(root));
     Mixer mixer;
     if (0 != Mixer::fromJSON(root, mixer))
     {
@@ -550,7 +521,7 @@ void Erizo::removeMixer(const Json::Value &root)
         stream_mixer->close();
         client->mixers.erase(mixer.id);
     }
-
+    
     if (client->canRemove())
     {
         removeClient(client->id);

@@ -647,10 +647,9 @@ void StreamMixer::mixFrame() {
     int cost_ms = 0;
     while(1) {
         std::unique_lock<std::mutex> lck(exit_mutex_);
-        if(std::cv_status::no_timeout == exit_cv_.wait_for(lck, std::chrono::milliseconds(40 - cost_ms))) {
-            if(exit_) {
-                break;
-            }
+        exit_cv_.wait_for(lck, std::chrono::milliseconds(40 - cost_ms));
+        if(exit_) {
+            break;
         }
         
         auto begin = std::chrono::high_resolution_clock::now();
@@ -706,11 +705,13 @@ void StreamMixer::mixFrame() {
             .build();
 
             for (auto& sink_pair : sink_pairs()) {
+                // ELOG_ERROR("********************  start on frame *********************");
                 sink_pair.sink->OnFrame(frame);
+                // ELOG_ERROR("********************  end on frame *********************");
             }
             return 0;
         });
-        ELOG_ERROR("mix pic end");
+        
     }
 }
 
@@ -719,7 +720,7 @@ void StreamMixer::close()
     if (!initialized_)
         return;
     exit_ = true;
-    exit_cv_.notify_one();
+    exit_cv_.notify_all();
     if(video_mix_thread_) {
         video_mix_thread_->join();
     }
@@ -742,7 +743,6 @@ StreamMixer::~StreamMixer()
 
 int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
-    ELOG_ERROR("****************** streammixer deliverAudioData_ :%s *******************", stream_id);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
         return 0;
@@ -758,7 +758,6 @@ int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, cons
 
 int StreamMixer::deliverVideoData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
-    ELOG_ERROR("****************** streammixer deliverVideoData_ :%s *******************", stream_id);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
         return 0;

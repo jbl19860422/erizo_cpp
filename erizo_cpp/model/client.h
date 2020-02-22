@@ -26,6 +26,12 @@ struct Client
         
         return false;
     }
+
+    operator std::string() {
+        std::ostringstream ostr;
+        ostr << "client:" << subscribers.size() << ", " << publishers.size() << ", " << mixers.size();
+        return ostr.str();
+    }
 };
 
 #endif
