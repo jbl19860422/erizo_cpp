@@ -290,7 +290,7 @@ int StreamMixer::init(const Mixer &mixer)
 {
     if (initialized_)
         return 0;
-
+    last_packet_time_ = time(NULL);
     mixer_ = mixer;
     auto layer_sort = [](const Layer &a, const Layer &b) {
         return a.index > b.index;
@@ -641,6 +641,11 @@ void StreamMixer::removeSubscriber(const std::string &client_id)
     }
 }
 
+void StreamMixer::setMediaStreamEventListener(MediaStreamEventListener* listener)
+{
+    media_stream_event_listener_ = listener;
+}
+
 void StreamMixer::mixFrame() {
     cv::Mat dst_rgb_img(mixer_.height, mixer_.width, CV_8UC3);
     cv::Mat dst_yuv_img;
@@ -651,7 +656,15 @@ void StreamMixer::mixFrame() {
         if(exit_) {
             break;
         }
-        
+
+        if((time(NULL) - last_packet_time_) > 5) 
+        {//超过30秒没有数据流，则通知外面要关闭这个混流
+            if(media_stream_event_listener_)
+            {
+                media_stream_event_listener_->notifyMediaStreamEvent(mixer_.stream_id, "Mixer::noPacketOvertime", mixer_.client_id);
+            }
+        }      
+
         auto begin = std::chrono::high_resolution_clock::now();
         for(const auto & layer: mixer_.layers) {
             int dst_width = layer.width;
@@ -743,6 +756,7 @@ StreamMixer::~StreamMixer()
 
 int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
+    last_packet_time_ = time(NULL);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
         return 0;
@@ -758,6 +772,7 @@ int StreamMixer::deliverAudioData_(std::shared_ptr<DataPacket> data_packet, cons
 
 int StreamMixer::deliverVideoData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id)
 {
+    last_packet_time_ = time(NULL);
     auto it = mix_streams_.find(stream_id);
     if(it == mix_streams_.end()) {
         return 0;

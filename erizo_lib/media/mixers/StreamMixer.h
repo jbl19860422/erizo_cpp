@@ -111,7 +111,7 @@ class StreamMixer : public MediaSink, public MediaSource, public FeedbackSink, p
     const char *kCName = "mix_stream";
 
 public:
-    StreamMixer();
+    StreamMixer(); 
     ~StreamMixer();
 
     int init(const Mixer &mixer);
@@ -127,6 +127,10 @@ public:
     void mixFrame();
     virtual void close() override;
 
+    /**
+    * Sets the Event Listener for this StreamMixer
+    */
+    void setMediaStreamEventListener(MediaStreamEventListener* listener);
 private:
     virtual int deliverAudioData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id) override;
     virtual int deliverVideoData_(std::shared_ptr<DataPacket> data_packet, const std::string &stream_id) override;
@@ -169,6 +173,8 @@ private:
     std::unique_ptr<webrtc::Call> send_call_ = nullptr;
     webrtc::VideoSendStream *video_send_stream_ = nullptr;
     webrtc::AudioSendStream *audio_send_stream_ = nullptr;
+    std::string audio_track_id_;
+    std::string video_track_id_;
     // std::vector<webrtc::VideoStream> video_send_streams_;
     std::shared_ptr<erizo::OneToManyProcessor> otm_processor_;
     std::unique_ptr<CustomBitrateAllocationStrategy> bitrate_allocation_strategy_;
@@ -176,11 +182,10 @@ private:
     bool exit_;
     std::mutex exit_mutex_;
     std::condition_variable exit_cv_;
-
-    std::string audio_track_id_;
-    std::string video_track_id_;
-
+    uint32_t last_packet_time_ = 0; // 上个包的时间：如果没有流超过一定时间，通知外部关闭mixer
+    
     std::map<std::string, std::shared_ptr<MixStream>> mix_streams_;
+    MediaStreamEventListener* media_stream_event_listener_ = nullptr;
     friend class CustomBitrateAllocationStrategy;
 };
 } // namespace erizo

@@ -322,6 +322,7 @@ void Erizo::addMixer(const Json::Value &root)
     std::string client_id = "cli_mixer_" + mixer.id;
     std::shared_ptr<Client> client = getOrCreateClient(client_id);
     stream_mixer->init(mixer);
+    stream_mixer->setMediaStreamEventListener(this);
     client->mixers[mixer.id] = stream_mixer;
 
     Json::Value event;
@@ -492,7 +493,6 @@ void Erizo::removeMixerLayer(const Json::Value &root)
 
 void Erizo::removeMixer(const Json::Value &root)
 {
-    ELOG_ERROR("*************** removeMixer %s *************", Utils::dumpJson(root));
     Mixer mixer;
     if (0 != Mixer::fromJSON(root, mixer))
     {
@@ -1120,4 +1120,36 @@ bool Erizo::canExit()
         return true;
     }
     return false;
+}
+
+void Erizo::notifyMediaStreamEvent(const std::string &stream_id, const std::string& type, const std::string& client_id)
+{
+    if(type == "Mixer::noPacketOvertime")
+    {
+        auto client = getOrCreateClient(client_id);
+        auto it = client->mixers.find(stream_id);
+        if(it == client->mixers.end())
+        {
+            return;
+        }
+        auto mixer_stream = it->second;//stream_id 和id是同一个值,后面要把id去掉
+        auto mixer = mixer_stream->getMixerConfig();
+        Json::Value event;
+        event["type"] = "closeMixer";
+        event["appId"] = mixer.appid;
+        event["agentId"] = mixer.agent_id;
+        event["erizoId"] = mixer.erizo_id;
+        event["streamId"] = mixer.stream_id;
+        event["clientId"] = mixer.client_id;
+        event["roomId"] = mixer.room_id;
+        event["isPublisher"] = true;
+        Json::FastWriter writer;
+        std::string msg = writer.write(event);
+        onEvent(mixer.reply_to, msg);
+    }
+}
+
+void Erizo::notifyStats(const std::string& message)
+{
+
 }

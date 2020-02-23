@@ -653,7 +653,7 @@ void MediaStream::notifyMediaStreamEvent(const std::string &type, const std::str
     boost::mutex::scoped_lock lock(event_listener_mutex_);
     if (this->media_stream_event_listener_ != nullptr)
     {
-        media_stream_event_listener_->notifyMediaStreamEvent(type, message);
+        media_stream_event_listener_->notifyMediaStreamEvent(stream_id_, type, message);
     }
 }
 

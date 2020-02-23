@@ -6,11 +6,13 @@
 #include <map>
 #include <sstream>
 
-class Connection;
+
 namespace erizo {
-    class StreamMixer;
-    class ExternalOutput;
+class Connection;
+class StreamMixer;
+class ExternalOutput;
 };
+
 struct Client
 {
     std::string id;
@@ -33,5 +35,6 @@ struct Client
         return ostr.str();
     }
 };
+
 
 #endif

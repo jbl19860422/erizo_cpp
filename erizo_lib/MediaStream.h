@@ -40,7 +40,7 @@ class MediaStreamEventListener {
  public:
     virtual ~MediaStreamEventListener() {
     }
-    virtual void notifyMediaStreamEvent(const std::string& type, const std::string& message) = 0;
+    virtual void notifyMediaStreamEvent(const std::string & stream_id, const std::string& type, const std::string& message) = 0;
 };
 /**
  * A MediaStream. This class represents a Media Stream that can be established with other peers via a SDP negotiation
