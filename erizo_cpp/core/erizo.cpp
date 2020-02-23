@@ -323,6 +323,19 @@ void Erizo::addMixer(const Json::Value &root)
     std::shared_ptr<Client> client = getOrCreateClient(client_id);
     stream_mixer->init(mixer);
     client->mixers[mixer.id] = stream_mixer;
+
+    Json::Value event;
+    event["type"] = "ready";
+    event["appId"] = mixer.appid;
+    event["agentId"] = mixer.agent_id;
+    event["erizoId"] = mixer.erizo_id;
+    event["streamId"] = mixer.stream_id;
+    event["clientId"] = mixer.client_id;
+    event["roomId"] = mixer.room_id;
+    event["isPublisher"] = true;
+    Json::FastWriter writer;
+    std::string msg = writer.write(event);
+    onEvent(mixer.reply_to, msg);
 }
 
 void Erizo::addMixerLayer(const Json::Value &root)

@@ -454,6 +454,8 @@ public:
     int64_t     appid;
     std::string id;
     std::string room_id;
+    std::string stream_id;
+    std::string reply_to;//其实不用，但是这里增加了，看看以后如果改grpc就删了
     std::string org_client_id;//发起的client_id
     std::string client_id;
     std::string erizo_id;
@@ -474,6 +476,8 @@ public:
         root["appid"] = appid;
         root["id"] = id;
         root["room_id"] = room_id;
+        root["stream_id"] = stream_id;
+        root["reply_to"] = reply_to;
         root["erizo_id"] = erizo_id;
         root["agent_id"] = agent_id;
         root["agent_ip"] = agent_ip;
@@ -501,6 +505,8 @@ public:
         root["appid"] = appid;
         root["id"] = id;
         root["room_id"] = room_id;
+        root["stream_id"] = stream_id;
+        root["reply_to"] = reply_to;
         root["erizo_id"] = erizo_id;
         root["agent_id"] = agent_id;
         root["agent_ip"] = agent_ip;
@@ -531,6 +537,8 @@ public:
         RETURN_IF_CHECK_MEM_ERR(root, "appid", Int64, -1);
         RETURN_IF_CHECK_MEM_ERR(root, "id", String, -2);
         RETURN_IF_CHECK_MEM_ERR(root, "room_id", String, -3);
+        RETURN_IF_CHECK_MEM_ERR(root, "stream_id", String, -3);
+        RETURN_IF_CHECK_MEM_ERR(root, "reply_to", String, -3);
         RETURN_IF_CHECK_MEM_ERR(root, "erizo_id", String, -4);
         RETURN_IF_CHECK_MEM_ERR(root, "agent_id", String, -5);
         RETURN_IF_CHECK_MEM_ERR(root, "agent_ip", String, -6);
@@ -548,6 +556,8 @@ public:
         mixer.appid = root["appid"].asInt64();
         mixer.id = root["id"].asString();
         mixer.room_id = root["room_id"].asString();
+        mixer.stream_id = root["stream_id"].asString();
+        mixer.reply_to = root["reply_to"].asString();
         mixer.erizo_id = root["erizo_id"].asString();
         mixer.agent_id = root["agent_id"].asString();
         mixer.agent_ip = root["agent_ip"].asString();
@@ -578,7 +588,9 @@ public:
     {
         RETURN_IF_CHECK_MEM_ERR(root, "appid", Int64, -1);
         RETURN_IF_CHECK_MEM_ERR(root, "id", String, -2);
+        RETURN_IF_CHECK_MEM_ERR(root, "stream_id", String, -2);
         RETURN_IF_CHECK_MEM_ERR(root, "room_id", String, -3);
+        RETURN_IF_CHECK_MEM_ERR(root, "reply_to", String, -3);
         RETURN_IF_CHECK_MEM_ERR(root, "erizo_id", String, -4);
         RETURN_IF_CHECK_MEM_ERR(root, "agent_id", String, -5);
         RETURN_IF_CHECK_MEM_ERR(root, "agent_ip", String, -6);
@@ -596,6 +608,8 @@ public:
         mixer.appid = root["appid"].asInt64();
         mixer.id = root["id"].asString();
         mixer.room_id = root["room_id"].asString();
+        mixer.stream_id = root["stream_id"].asString();
+        mixer.reply_to = root["reply_to"].asString();
         mixer.erizo_id = root["erizo_id"].asString();
         mixer.agent_id = root["agent_id"].asString();
         mixer.agent_ip = root["agent_ip"].asString();
