@@ -190,12 +190,19 @@ ExternalOutput::ExternalOutput(std::shared_ptr<Worker> worker,
     }
 }
 
-bool ExternalOutput::init()
+bool ExternalOutput::init(int64_t appid, const std::string & room_id, const std::string &stream_id, const std::string &client_id, const std::string & reply_to)
 {
+    appid_ = appid;
+    room_id_ = room_id;
+    stream_id_ = stream_id;
+    client_id_ = client_id;
+    reply_to_ = reply_to;
+
     MediaInfo m;
     m.hasVideo = false;
     m.hasAudio = false;
     recording_ = true;
+    last_packet_time_ = time(NULL);
     asyncTask([](std::shared_ptr<ExternalOutput> output) {
         output->initializePipeline();
     });
@@ -779,6 +786,7 @@ void ExternalOutput::queueDataAsync(std::shared_ptr<DataPacket> copied_packet)
 
 int ExternalOutput::deliverAudioData_(std::shared_ptr<DataPacket> audio_packet, const std::string &stream_id)
 {
+    last_packet_time_ = time(NULL);
     std::shared_ptr<DataPacket> copied_packet = std::make_shared<DataPacket>(*audio_packet);
     copied_packet->type = AUDIO_PACKET;
     queueDataAsync(copied_packet);
@@ -787,6 +795,7 @@ int ExternalOutput::deliverAudioData_(std::shared_ptr<DataPacket> audio_packet, 
 
 int ExternalOutput::deliverVideoData_(std::shared_ptr<DataPacket> video_packet, const std::string &stream_id)
 {
+    last_packet_time_ = time(NULL);
     if (video_source_ssrc_ == 0)
     {
         RtpHeader *h = reinterpret_cast<RtpHeader *>(video_packet->data);
@@ -811,6 +820,11 @@ int ExternalOutput::deliverEvent_(MediaEventPtr event)
         output_ptr->pipeline_->notifyEvent(event);
     });
     return 1;
+}
+
+void ExternalOutput::setMediaStreamEventListener(MediaStreamEventListener* listener)
+{
+    media_stream_event_listener_ = listener;
 }
 
 void ExternalOutput::queueData(char *buffer, int length, packetType type)
@@ -930,8 +944,18 @@ void ExternalOutput::sendLoop()
 {
     while (recording_)
     {
-        boost::unique_lock<boost::mutex> lock(mtx_);
-        cond_.wait(lock);
+        std::unique_lock<std::mutex> lock(mtx_);
+        cond_.wait_for(lock, std::chrono::milliseconds(100));
+
+        if((time(NULL) - last_packet_time_) > 5) 
+        {//超过30秒没有数据流，则通知外面要关闭这个混流
+            if(media_stream_event_listener_)
+            {
+                last_packet_time_ = time(NULL);
+                media_stream_event_listener_->notifyMediaStreamEvent(stream_id_, "Recorder::noPacketOvertime", client_id_);
+            }
+        }   
+
         while (audio_queue_.hasData())
         {
             boost::shared_ptr<DataPacket> audio_packet = audio_queue_.popPacket();

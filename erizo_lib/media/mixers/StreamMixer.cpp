@@ -661,6 +661,7 @@ void StreamMixer::mixFrame() {
         {//超过30秒没有数据流，则通知外面要关闭这个混流
             if(media_stream_event_listener_)
             {
+                last_packet_time_ = time(NULL);
                 media_stream_event_listener_->notifyMediaStreamEvent(mixer_.stream_id, "Mixer::noPacketOvertime", mixer_.client_id);
             }
         }      

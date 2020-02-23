@@ -17,6 +17,7 @@ extern "C" {
 #include <string>
 
 #include "./MediaDefinitions.h"
+#include "MediaStream.h"
 #include "thread/Worker.h"
 #include "rtp/RtpPacketQueue.h"
 #include "rtp/RtpExtensionProcessor.h"
@@ -55,7 +56,8 @@ class ExternalOutput : public MediaSink, public RawDataReceiver, public Feedback
                           const std::function<void(const std::string &stream_id, const std::string &file, int64_t timestamp_ms)> &create_file_cb,
                           const std::function<void(const std::string &stream_id, const std::string &file, int64_t dur_video, int64_t dur_audio)> &done_cb);
   virtual ~ExternalOutput();
-  bool init();
+  bool init(int64_t appid, const std::string & room_id, const std::string & stream_id, const std::string & client_id,
+            const std::string & reply_to);
   void receiveRawData(const RawDataPacket& packet) override;
 
   // webrtc::RtpData callbacks.  This is for Forward Error Correction (per rfc5109) handling.
@@ -72,16 +74,28 @@ class ExternalOutput : public MediaSink, public RawDataReceiver, public Feedback
 
   bool isRecording() { return recording_; }
 
+  /**
+    * Sets the Event Listener for this StreamMixer
+    */
+  void setMediaStreamEventListener(MediaStreamEventListener* listener);
+
+  int64_t appid_;
+  std::string room_id_;
+  std::string stream_id_;
+  std::string client_id_;
+  std::string reply_to_;
+
  private:
+
   bool closed_ = false;
   std::shared_ptr<Worker> worker_;
   Pipeline::Ptr pipeline_;
   std::unique_ptr<licode::webrtc::UlpfecReceiver> fec_receiver_;
   RtpPacketQueue audio_queue_, video_queue_;
   std::atomic<bool> recording_, inited_;
-  boost::mutex mtx_;  // a mutex we use to signal our writer thread that data is waiting.
+  std::mutex mtx_;  // a mutex we use to signal our writer thread that data is waiting.
   boost::thread thread_;
-  boost::condition_variable cond_;
+  std::condition_variable cond_;
   uint32_t video_source_ssrc_;
   std::unique_ptr<Depacketizer> depacketizer_ = nullptr;
 
@@ -144,6 +158,9 @@ class ExternalOutput : public MediaSink, public RawDataReceiver, public Feedback
   opus_int16 *decode_pcm_ = nullptr;
   uint8_t *encoded_aac_data_ = nullptr;
   size_t aac_data_len_;
+
+  uint32_t last_packet_time_ = 0;
+  MediaStreamEventListener *media_stream_event_listener_ = nullptr;
 
   int sendFirPacket();
   void asyncTask(std::function<void(std::shared_ptr<ExternalOutput>)> f);

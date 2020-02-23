@@ -819,7 +819,8 @@ int Erizo::addRecorder(const Json::Value &root)
         done_cb);
     std::map<std::string, std::string> record_file_map_;
 
-    external_output->init();
+    external_output->init(appid, room_id, stream_id, client_id, reply_to);//todo add room_id
+    external_output->setMediaStreamEventListener(this);
 
     std::shared_ptr<BridgeConn> bridge_conn = getBridgeConn(bridge_id);
     if (bridge_conn != nullptr)
@@ -1146,6 +1147,25 @@ void Erizo::notifyMediaStreamEvent(const std::string &stream_id, const std::stri
         Json::FastWriter writer;
         std::string msg = writer.write(event);
         onEvent(mixer.reply_to, msg);
+    } 
+    else if(type == "Recorder::noPacketOvertime") 
+    {
+        auto client = getOrCreateClient(client_id);
+        auto it = client->recorders.find(stream_id);
+        if(it == client->recorders.end())
+        {
+            return;
+        }
+        auto recorder = it->second;
+        Json::Value event;
+        event["type"] = "closeRecorder";
+        event["appId"] = recorder->appid_;
+        event["streamId"] = recorder->stream_id_;
+        event["clientId"] = recorder->client_id_;
+        event["roomId"] = recorder->room_id_;
+        Json::FastWriter writer;
+        std::string msg = writer.write(event);
+        onEvent(recorder->reply_to_, msg);
     }
 }
 
