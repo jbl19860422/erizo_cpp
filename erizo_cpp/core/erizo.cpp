@@ -49,7 +49,6 @@ void Erizo::waitExit()
     std::unique_lock<std::mutex> lck(mtx);
     while(!exit_) 
     {
-        ELOG_ERROR("**********************************wait for %d****************************", clients_.size());
         if(exit_cv_.wait_for(lck, std::chrono::seconds(5)) == std::cv_status::timeout) 
         {
             continue;

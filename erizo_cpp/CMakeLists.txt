@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "-g -Wall -gdwarf-2 -gstrict-dwarf -DWEBRTC_POSIX -DWEBRTC_L
 # rpath
 set(CMAKE_SKIP_BUILD_RPATH FALSE)                 # 编译时加上RPATH  
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)          # 编译时RPATH不使用安装的RPATH  
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")                       # 安装RPATH为空  
+set(CMAKE_INSTALL_RPATH "${CMAKE_BINARY_DIR}/lib")                       # 安装RPATH为空  
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)       # 安装的执行文件加上RPATH
 # include, link
 include_directories("${ERIZO_CPP_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/include")

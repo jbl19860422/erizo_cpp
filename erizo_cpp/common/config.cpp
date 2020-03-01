@@ -118,6 +118,17 @@ int Config::initConfig(const Json::Value &root)
         network_interfaces_[item["isp"].asString()] = item["iface"].asString();
     }
 
+    if(ice.isMember("address_trans") && ice["address_trans"].isObject())
+    {
+        Json::Value address_trans = ice["address_trans"];
+        Json::Value::Members members = address_trans.getMemberNames();
+        for (auto it = members.begin(); it != members.end(); it++)
+        {
+            std::string value = address_trans[*it].asString();
+            address_trans_map[*it] = value;
+        }
+    }
+
     Json::Value stun = ice["stun"];
     if (!ice.isMember("stun") ||
         stun.type() != Json::objectValue ||

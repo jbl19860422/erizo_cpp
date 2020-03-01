@@ -31,7 +31,8 @@ include(3rd.cmake)
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}")
-
+SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
+SET(CMAKE_INSTALL_RPATH "../lib")
 #global variable
 set(THIRD_PARTY_INCLUDE "${CMAKE_BINARY_DIR}/include/" "${CMAKE_BINARY_DIR}/include/webrtc_inc" "${CMAKE_BINARY_DIR}/include/webrtc_inc/third_party/abseil-cpp")
 set(THIRD_PARTY_LIB "${CMAKE_BINARY_DIR}/lib/")

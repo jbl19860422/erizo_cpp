@@ -67,6 +67,7 @@ void Connection::init(const std::string &agent_id,
     ice_config.turn_port = Config::getInstance()->turn_port;
     ice_config.turn_username = Config::getInstance()->turn_username;
     ice_config.turn_pass = Config::getInstance()->turn_passwd;
+    ice_config.address_trans_map = Config::getInstance()->address_trans_map;
     ice_config.network_interface = "";
   
     auto it = Config::getInstance()->network_interfaces_.find(isp);

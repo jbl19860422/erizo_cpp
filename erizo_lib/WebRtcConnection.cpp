@@ -56,7 +56,7 @@ WebRtcConnection::WebRtcConnection(std::shared_ptr<Worker> worker, std::shared_p
     stats_ = std::make_shared<Stats>();
     distributor_ = std::unique_ptr<BandwidthDistributionAlgorithm>(new TargetVideoBWDistributor());
     global_state_ = CONN_INITIAL;
-
+    local_sdp_->setAddressTransMap(ice_config.address_trans_map);
     trickle_enabled_ = ice_config_.should_trickle;
     slide_show_mode_ = false;
 
