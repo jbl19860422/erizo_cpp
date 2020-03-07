@@ -9,6 +9,7 @@
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/builtin_video_decoder_factory.h"
+#include "logging/rtc_event_log/output/rtc_event_log_output_file.h"
 #include "pc/test/fake_audio_capture_module.h"
 
 #include "call/call_config.h"
@@ -66,6 +67,11 @@ bool MixStream::init()
     video_decoder_factory_ = webrtc::CreateBuiltinVideoDecoderFactory();
 
     rtc_event_log_ = webrtc::RtcEventLog::CreateNull();
+    // rtc_event_log_ = webrtc::RtcEventLog::Create(webrtc::RtcEventLog::EncodingType::Legacy);
+    // bool event_log_started = rtc_event_log_->StartLogging(absl::make_unique<webrtc::RtcEventLogOutputFile>(
+    //                                                       "/home/jiangbaolin/webrtc_recv.log", webrtc::RtcEventLog::kUnlimitedOutput),
+    //                                                      webrtc::RtcEventLog::kImmediateOutput);
+
     webrtc::Call::Config call_config(rtc_event_log_.get());
     call_config.audio_state = media_engine_->voice().GetAudioState();
     call_.reset(webrtc::CreateCallFactory()->CreateCall(call_config));
@@ -290,6 +296,10 @@ int StreamMixer::init(const Mixer &mixer)
 {
     if (initialized_)
         return 0;
+    rtc::LogMessage::LogToDebug(rtc::INFO);
+    mixer_log_ = std::make_shared<MixerLog>(mixer.stream_id + ".webrtc.log");
+    rtc::LogMessage::AddLogToStream(mixer_log_.get(), rtc::INFO);
+
     last_packet_time_ = time(NULL);
     mixer_ = mixer;
     auto layer_sort = [](const Layer &a, const Layer &b) {
@@ -399,6 +409,10 @@ int StreamMixer::createSendStream()
         audio_state_config.audio_processing = webrtc::AudioProcessingBuilder().Create();
         audio_state_config.audio_device_module = send_adm_;
         rtc_event_log_ = webrtc::RtcEventLog::CreateNull();
+        // rtc_event_log_ = webrtc::RtcEventLog::Create(webrtc::RtcEventLog::EncodingType::Legacy);
+        // bool event_log_started = rtc_event_log_->StartLogging(absl::make_unique<webrtc::RtcEventLogOutputFile>(
+        //                                                   "/home/jiangbaolin/webrtc.log", webrtc::RtcEventLog::kUnlimitedOutput),
+        //                                                  webrtc::RtcEventLog::kImmediateOutput);
         webrtc::Call::Config call_config(rtc_event_log_.get());
         call_config.audio_state = webrtc::AudioState::Create(audio_state_config);
         if(!call_config.audio_state) {
@@ -666,7 +680,7 @@ void StreamMixer::mixFrame() {
             }
         }      
 
-        auto begin = std::chrono::high_resolution_clock::now();
+        // auto begin = std::chrono::high_resolution_clock::now();
         for(const auto & layer: mixer_.layers) {
             int dst_width = layer.width;
             int dst_height = layer.height;
@@ -699,13 +713,17 @@ void StreamMixer::mixFrame() {
                 cv::Mat	matMask;
                 cv::cvtColor(scaleImage, matMask, cv::COLOR_BGR2GRAY);
                 scaleImage.copyTo(imageROI, matMask);
+            } else {
+                ELOG_ERROR("====================== could not get video data of %s =====================", layer.stream_id);
             }
         }
 
         cv::cvtColor(dst_rgb_img, dst_yuv_img, cv::COLOR_RGB2YUV_I420);
-        auto end = std::chrono::high_resolution_clock::now();
-        auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin);
-        cost_ms = dur.count();
+        // auto end = std::chrono::high_resolution_clock::now();
+        // auto dur = std::chrono::duration_cast<std::chrono::milliseconds>(end-begin);
+        // cost_ms = dur.count();
+        // ELOG_ERROR("*************** cost_ms=%d ****************", cost_ms);
+        // auto begin1 = std::chrono::high_resolution_clock::now();
         send_worker_thread_->Invoke<int>(RTC_FROM_HERE, [=, &dst_yuv_img]() {
             webrtc::VideoFrame frame =
             webrtc::VideoFrame::Builder()
@@ -719,13 +737,13 @@ void StreamMixer::mixFrame() {
             .build();
 
             for (auto& sink_pair : sink_pairs()) {
-                // ELOG_ERROR("********************  start on frame *********************");
                 sink_pair.sink->OnFrame(frame);
-                // ELOG_ERROR("********************  end on frame *********************");
             }
             return 0;
         });
-        
+        // auto end1 = std::chrono::high_resolution_clock::now();
+        // auto dur1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1-begin1);
+        // ELOG_ERROR("*************** cost_ms1=%d ****************", dur1.count());
     }
 }
 
@@ -740,6 +758,7 @@ void StreamMixer::close()
     }
     removeRecvStreams();
     removeSendStream();
+
     setFeedbackSink(nullptr);
     setAudioSink(nullptr);
     setVideoSink(nullptr);
@@ -747,6 +766,7 @@ void StreamMixer::close()
     otm_processor_->close();
     otm_processor_.reset();
     otm_processor_ = nullptr;
+
     initialized_ = false;
 }
 
@@ -792,7 +812,8 @@ int StreamMixer::deliverFeedback_(std::shared_ptr<DataPacket> fb_packet, const s
     RtcpHeader *chead = reinterpret_cast<RtcpHeader*>(fb_packet->data);
     send_worker_thread_->Invoke<int>(RTC_FROM_HERE, [=]() {
         rtc::CopyOnWriteBuffer buffer(fb_packet->data, fb_packet->length);
-        send_call_->Receiver()->DeliverPacket(webrtc::MediaType::ANY, buffer, fb_packet->received_time_ms*1000);
+        //send_call_->Receiver()->DeliverPacket(webrtc::MediaType::ANY, buffer, fb_packet->received_time_ms*1000);
+        send_call_->Receiver()->DeliverPacket(webrtc::MediaType::ANY, buffer, fb_packet->received_time_ms);
         return 0;
     });
     return fb_packet->length;
@@ -810,9 +831,13 @@ bool StreamMixer::SendRtp(const uint8_t* packet,
     if(rtp_packet->PayloadType() == 111) {
         std::shared_ptr<erizo::DataPacket> ez_packet = std::make_shared<erizo::DataPacket>(1, (const char*)packet, length, erizo::AUDIO_PACKET, ClockUtils::getCurrentMs());
         otm_processor_->deliverAudioData(std::move(ez_packet), mixer_.id);
+        // ELOG_ERROR("mixer send audio");
     } else if(rtp_packet->PayloadType() == 101) {
         std::shared_ptr<erizo::DataPacket> ez_packet = std::make_shared<erizo::DataPacket>(1, (const char*)packet, length, erizo::VIDEO_PACKET, ClockUtils::getCurrentMs());
         otm_processor_->deliverVideoData(std::move(ez_packet), mixer_.id);
+        ELOG_ERROR("mixer send video");
+    } else {
+        ELOG_ERROR("deliver unknown rtp time:%d", ClockUtils::getCurrentMs());
     }
     return true;
 }
@@ -826,6 +851,8 @@ bool StreamMixer::SendRtcp(const uint8_t* packet, size_t length)
     } else if(chead->getSSRC() == mixer_.audio_ssrc) {
         std::shared_ptr<erizo::DataPacket> ez_packet = std::make_shared<erizo::DataPacket>(1, (const char*)packet, length, erizo::AUDIO_PACKET, ClockUtils::getCurrentMs());
         otm_processor_->deliverAudioData(std::move(ez_packet), mixer_.id);
+    } else {
+        ELOG_ERROR("deliver unknown rtcp");
     }
     return true;
 }
@@ -843,7 +870,7 @@ std::vector<uint32_t> CustomBitrateAllocationStrategy::AllocateBitrates(uint32_t
         if(track_config.track_id == stream_mixer_->audio_track_id_) {
             vec_bitrates.push_back(65000);//audio
         } else if(track_config.track_id == stream_mixer_->video_track_id_) {
-            vec_bitrates.push_back(stream_mixer_->mixer_.bitrate);
+            vec_bitrates.push_back(stream_mixer_->mixer_.bitrate*1000);
         }
     }
     return vec_bitrates;

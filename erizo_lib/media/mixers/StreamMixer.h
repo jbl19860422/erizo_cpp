@@ -8,6 +8,7 @@
 #include <vector>
 #include <tuple>
 #include <condition_variable>
+#include <fstream>
 
 #include "./MediaDefinitions.h"
 #include "media/MediaProcessor.h"
@@ -27,6 +28,7 @@
 #include "MediaStream.h"
 #include "media/mixers/mixer.h"
 #include "api/video_codecs/video_decoder_factory.h"
+#include "rtc_base/logging.h"
 
 namespace erizo
 {
@@ -34,6 +36,31 @@ class WebRtcConnection;
 class OneToManyProcessor;
 class StreamMixer;
 class RTPSink;
+
+
+class MixerLog : public rtc::LogSink {
+public:
+	MixerLog(const std::string & log_file) {
+		file_.open(log_file, std::ios::out);
+	}
+	virtual ~MixerLog() {
+		if (file_) {
+			file_.close();
+		}
+	}
+
+	virtual void OnLogMessage(const std::string& message) {
+		if (!file_) {
+			return;
+		}
+
+		file_ << message;
+		file_.flush();
+	}
+
+private:
+	std::ofstream file_;
+};
 
 class MixStream : public rtc::VideoSinkInterface<webrtc::VideoFrame>, public webrtc::Transport
 { //单独一路带混合的流
@@ -186,6 +213,8 @@ private:
     
     std::map<std::string, std::shared_ptr<MixStream>> mix_streams_;
     MediaStreamEventListener* media_stream_event_listener_ = nullptr;
+
+    std::shared_ptr<MixerLog> mixer_log_;
     friend class CustomBitrateAllocationStrategy;
 };
 } // namespace erizo

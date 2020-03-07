@@ -69,25 +69,25 @@ void SenderBandwidthEstimationHandler::read(Context *ctx, std::shared_ptr<DataPa
       chead = reinterpret_cast<RtcpHeader*>(packet_pointer);
       rtcp_length = (ntohs(chead->length) + 1) * 4;
       total_length += rtcp_length;
-      ELOG_DEBUG("%s ssrc %u, sourceSSRC %u, PacketType %u", stream_->toLog(),
-          chead->getSSRC(),
-          chead->getSourceSSRC(),
-          chead->getPacketType());
+      // ELOG_DEBUG("%s ssrc %u, sourceSSRC %u, PacketType %u", stream_->toLog(),
+      //     chead->getSSRC(),
+      //     chead->getSourceSSRC(),
+      //     chead->getPacketType());
       switch (chead->packettype) {
         case RTCP_Receiver_PT:
           {
             if (chead->getSourceSSRC() != stream_->getVideoSinkSSRC()) {
               continue;
             }
-            ELOG_DEBUG("%s, Analyzing Video RR: PacketLost %u, Ratio %u, current_block %d, blocks %d"
-                ", sourceSSRC %u, ssrc %u",
-                stream_->toLog(),
-                chead->getLostPackets(),
-                chead->getFractionLost(),
-                current_block,
-                chead->getBlockCount(),
-                chead->getSourceSSRC(),
-                chead->getSSRC());
+            // ELOG_DEBUG("%s, Analyzing Video RR: PacketLost %u, Ratio %u, current_block %d, blocks %d"
+            //     ", sourceSSRC %u, ssrc %u",
+            //     stream_->toLog(),
+            //     chead->getLostPackets(),
+            //     chead->getFractionLost(),
+            //     current_block,
+            //     chead->getBlockCount(),
+            //     chead->getSourceSSRC(),
+            //     chead->getSSRC());
             // calculate RTT + Update receiver block
             uint32_t delay_since_last_ms = (chead->getDelaySinceLastSr() * 1000) / 65536;
             int64_t now_ms = ClockUtils::timePointToMs(clock_->now());
@@ -100,11 +100,11 @@ void SenderBandwidthEstimationHandler::read(Context *ctx, std::shared_ptr<DataPa
             // TODO(pedro) Implement alternative when there are no REMBs
             if (received_remb_ && value != sr_delay_data_.end()) {
                 uint32_t delay = now_ms - (*value)->sr_send_time - delay_since_last_ms;
-                ELOG_DEBUG("%s message: Updating Estimate with RR, fraction_lost: %u, "
-                    "delay: %u, period_packets_sent_: %u",
-                    stream_->toLog(), chead->getFractionLost(), delay, period_packets_sent_);
-                sender_bwe_->UpdateReceiverBlock(chead->getFractionLost(),
-                    delay, period_packets_sent_, now_ms);
+                // ELOG_DEBUG("%s message: Updating Estimate with RR, fraction_lost: %u, "
+                //     "delay: %u, period_packets_sent_: %u",
+                //     stream_->toLog(), chead->getFractionLost(), delay, period_packets_sent_);
+                // sender_bwe_->UpdateReceiverBlock(chead->getFractionLost(),
+                //     delay, period_packets_sent_, now_ms);
                 period_packets_sent_ = 0;
                 updateEstimate();
             }
@@ -121,8 +121,8 @@ void SenderBandwidthEstimationHandler::read(Context *ctx, std::shared_ptr<DataPa
                 uint64_t cappedBitrate = bitrate < processor_->getMaxVideoBW() ? bitrate : processor_->getMaxVideoBW();
                 chead->setREMBBitRate(cappedBitrate);
 
-                ELOG_DEBUG("%s message: Updating Estimate with REMB, bitrate %lu", stream_->toLog(),
-                    cappedBitrate);
+                // ELOG_DEBUG("%s message: Updating Estimate with REMB, bitrate %lu", stream_->toLog(),
+                //     cappedBitrate);//这里打印比较多，注意
                 sender_bwe_->UpdateReceiverEstimate(now_ms, cappedBitrate);
                 updateEstimate();
               } else {
@@ -161,7 +161,7 @@ void SenderBandwidthEstimationHandler::analyzeSr(RtcpHeader* chead) {
   uint64_t now = ClockUtils::timePointToMs(clock_->now());
   uint32_t ntp;
   ntp = chead->get32MiddleNtp();
-  ELOG_DEBUG("%s message: adding incoming SR to list, ntp: %u", stream_->toLog(), ntp);
+  // ELOG_DEBUG("%s message: adding incoming SR to list, ntp: %u", stream_->toLog(), ntp);
   sr_delay_data_.push_back(std::shared_ptr<SrDelayData>( new SrDelayData(ntp, now)));
   if (sr_delay_data_.size() >= kMaxSrListSize) {
     sr_delay_data_.pop_front();
@@ -173,8 +173,8 @@ void SenderBandwidthEstimationHandler::updateEstimate() {
       &estimated_rtt_);
   stats_->getNode()["total"].insertStat("senderBitrateEstimation",
       CumulativeStat{static_cast<uint64_t>(estimated_bitrate_)});
-  ELOG_DEBUG("%s message: estimated bitrate %d, loss %u, rtt %ld",
-      stream_->toLog(), estimated_bitrate_, estimated_loss_, estimated_rtt_);
+  // ELOG_DEBUG("%s message: estimated bitrate %d, loss %u, rtt %ld",
+  //     stream_->toLog(), estimated_bitrate_, estimated_loss_, estimated_rtt_);
   if (bwe_listener_) {
     bwe_listener_->onBandwidthEstimate(estimated_bitrate_, estimated_loss_, estimated_rtt_);
   }
