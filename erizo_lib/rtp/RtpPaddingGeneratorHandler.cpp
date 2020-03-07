@@ -14,7 +14,7 @@ DEFINE_LOGGER(RtpPaddingGeneratorHandler, "rtp.RtpPaddingGeneratorHandler");
 constexpr duration kStatsPeriod = std::chrono::milliseconds(100);
 constexpr uint8_t kMaxPaddingSize = 255;
 constexpr uint64_t kMinMarkerRate = 3;
-constexpr uint64_t kInitialBitrate = 300000;
+constexpr uint64_t kInitialBitrate = 400000;
 constexpr uint64_t kPaddingBurstSize = 255 * 10;
 
 RtpPaddingGeneratorHandler::RtpPaddingGeneratorHandler(std::shared_ptr<erizo::Clock> the_clock) :

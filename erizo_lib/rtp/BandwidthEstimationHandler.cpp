@@ -274,6 +274,7 @@ void BandwidthEstimationHandler::sendREMBPacket()
     uint32_t capped_bitrate = max_video_bw_ > 0 ? std::min(max_video_bw_, bitrate_) : bitrate_;
     // ELOG_DEBUG("Bitrates min(%u,%u) = %u", bitrate_, max_video_bw_, capped_bitrate);
     remb_packet_.setREMBBitRate(capped_bitrate);
+    ELOG_DEBUG("================== setREMBBitRate:%u ================", capped_bitrate);
     remb_packet_.setREMBNumSSRC(1);
     remb_packet_.setREMBFeedSSRC(0, stream_->getVideoSourceSSRC());
     int remb_length = (remb_packet_.getLength() + 1) * 4;

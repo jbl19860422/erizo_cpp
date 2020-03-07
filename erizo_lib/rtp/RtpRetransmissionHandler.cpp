@@ -9,7 +9,7 @@ namespace erizo {
 
 DEFINE_LOGGER(RtpRetransmissionHandler, "rtp.RtpRetransmissionHandler");
 
-constexpr float kDefaultBitrate = 300000.;
+constexpr float kDefaultBitrate = 400000.;
 
 RtpRetransmissionHandler::RtpRetransmissionHandler(std::shared_ptr<erizo::Clock> the_clock)
   : clock_{the_clock},

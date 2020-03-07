@@ -6,12 +6,13 @@
 #include "./MediaDefinitions.h"
 
 #include <stdint.h>
-
+#include "./logger.h"
 #include <memory>
 
 namespace erizo {
 
 class RtpUtils {
+  DECLARE_LOGGER();
  public:
   static bool sequenceNumberLessThan(uint16_t first, uint16_t second);
 

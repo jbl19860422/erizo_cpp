@@ -420,13 +420,13 @@ int StreamMixer::createSendStream()
             return -2;
         }
         call_config.bitrate_config.min_bitrate_bps = 70000;
-        call_config.bitrate_config.start_bitrate_bps = 300000;
+        call_config.bitrate_config.start_bitrate_bps = 400000;
         call_config.bitrate_config.max_bitrate_bps = 3000000;
         send_call_.reset(webrtc::CreateCallFactory()->CreateCall(call_config));
 
         webrtc::BitrateConstraints bitrate_config;
         bitrate_config.min_bitrate_bps = 70000;
-        bitrate_config.start_bitrate_bps = 300000;
+        bitrate_config.start_bitrate_bps = 400000;
         bitrate_config.max_bitrate_bps = 3000000;
         send_call_->GetTransportControllerSend()->SetSdpBitrateParameters(bitrate_config);
         

@@ -162,6 +162,7 @@ bool MediaStream::setRemoteSdp(std::shared_ptr<SdpInfo> sdp)
         return true;
     }
     remote_sdp_ = std::make_shared<SdpInfo>(*sdp.get());
+    
     if (remote_sdp_->videoBandwidth != 0)
     {
         ELOG_DEBUG("%s message: Setting remote BW, maxVideoBW: %u", toLog(), remote_sdp_->videoBandwidth);

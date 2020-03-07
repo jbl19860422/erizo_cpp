@@ -5,7 +5,7 @@
 
 namespace erizo {
 
-
+DEFINE_LOGGER(RtpUtils, "RtpUtils");
 constexpr int kMaxPacketSize = 1500;
 
 bool RtpUtils::sequenceNumberLessThan(uint16_t first, uint16_t last) {
@@ -24,6 +24,7 @@ void RtpUtils::updateREMB(RtcpHeader *chead, uint bitrate) {
   if (chead->packettype == RTCP_PS_Feedback_PT && chead->getBlockCount() == RTCP_AFB) {
     char *uniqueId = reinterpret_cast<char*>(&chead->report.rembPacket.uniqueid);
     if (!strncmp(uniqueId, "REMB", 4)) {
+      ELOG_DEBUG("================== setREMBBitRate11:%u ================", bitrate);
       chead->setREMBBitRate(bitrate);
     }
   }
@@ -104,6 +105,7 @@ std::shared_ptr<DataPacket> RtpUtils::createREMB(uint32_t ssrc, std::vector<uint
   remb.setSourceSSRC(0);
   remb.setLength(4 + ssrc_list.size());
   remb.setREMBBitRate(bitrate);
+  ELOG_DEBUG("================== setREMBBitRate:%u ================", bitrate);
   remb.setREMBNumSSRC(ssrc_list.size());
   uint8_t index = 0;
   for (uint32_t feed_ssrc : ssrc_list) {

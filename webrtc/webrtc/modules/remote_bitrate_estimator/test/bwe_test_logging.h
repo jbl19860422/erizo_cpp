@@ -37,11 +37,11 @@
 //   stream_00000001_weight 13.000000 tonnes
 //   PLOT  stream_00000001_bps  1.000000  0.000000
 //   PLOT  stream_00000001_bps  1.000000  0.400000
-//   PLOT  stream_00000001_bps  1.000000  0.800000
+//   PLOT  stream_00000001_bps  1.000000  0.400000
 //   stream_00000003_weight 39.000000 tonnes
 //   PLOT  stream_00000003_bps  1.000000  0.000000
 //   PLOT  stream_00000003_bps  1.000000  0.400000
-//   PLOT  stream_00000003_bps  1.000000  0.800000
+//   PLOT  stream_00000003_bps  1.000000  0.400000
 //
 // Log *contexts* are names concatenated with '_' between them, with the name
 // of the logged/plotted string/value last. Plot *time* is inherited down the

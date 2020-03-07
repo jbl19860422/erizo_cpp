@@ -106,6 +106,7 @@ int RtcpForwarder::analyzeFeedback(char *buf, int len) {
                   ELOG_DEBUG("Received REMB %lu, partnum %u, cappedBitrate %lu",
                               bitrate, currentBlock, cappedBitrate);
                   chead->setREMBBitRate(cappedBitrate);
+                  ELOG_DEBUG("================== setREMBBitRate:%u ================", bitrate);
                 } else {
                   ELOG_WARN("Unsupported AFB Packet not REMB")
                 }

@@ -50,7 +50,7 @@ class BitrateController : public Module {
   // estimation and divide the available bitrate between all its registered
   // BitrateObservers.
  public:
-  static const int kDefaultStartBitratebps = 300000;
+  static const int kDefaultStartBitratebps = 400000;
 
   // Deprecated:
   // TODO(perkj): BitrateObserver has been deprecated and is not used in WebRTC.
