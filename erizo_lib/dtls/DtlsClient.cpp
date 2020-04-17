@@ -126,24 +126,20 @@ int SSLVerifyCallback(int ok, X509_STORE_CTX* store) {
 
 int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCert, EVP_PKEY*& outKey) {  // NOLINT
   std::ostringstream info;
-  std::cout << "createCert 1" << std::endl;
   info << "Generating new user cert for" << pAor;
   ELOG_DEBUG2(sslLogger, "%s", info.str().c_str());
   std::string aor = "sip:" + pAor;
 
   // Make sure that necessary algorithms exist:
   assert(EVP_sha1());
-  std::cout << "createCert 2" << std::endl;
   EVP_PKEY* privkey = EVP_PKEY_new();
   assert(privkey);
 
   RSA* rsa = RSA_new();
-  std::cout << "createCert 3" << std::endl;
   BIGNUM* exponent = BN_new();
   BN_set_word(exponent, 0x10001);
 
   RSA_generate_key_ex(rsa, KEY_LENGTH, exponent, NULL);
-  std::cout << "createCert 4" << std::endl;
   // RSA* rsa = RSA_generate_key(keyLen, RSA_F4, NULL, NULL);
   assert(rsa);    // couldn't make key pair
 
@@ -152,7 +148,6 @@ int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCe
 
   X509* cert = X509_new();
   assert(cert);
-  std::cout << "createCert 5" << std::endl;
   X509_NAME* subject = X509_NAME_new();
   X509_EXTENSION* ext = X509_EXTENSION_new();
 
@@ -161,7 +156,6 @@ int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCe
   std::string thread_id = boost::lexical_cast<std::string>(boost::this_thread::get_id());
   unsigned int thread_number = 0;
   sscanf(thread_id.c_str(), "%x", &thread_number);
-  std::cout << "createCert 6" << std::endl;
   int serial = rand_r(&thread_number);  // get an int worth of randomness
   assert(sizeof(int) == 4);
   ASN1_INTEGER_set(X509_get_serialNumber(cert), serial);
@@ -177,16 +171,11 @@ int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCe
   assert(ret);
   ret = X509_set_subject_name(cert, subject);
   assert(ret);
-  std::cout << "createCert 7" << std::endl;
   const long duration = 60 * 60 * 24 * expireDays;  // NOLINT
-  std::cout << "createCert 7.1" << std::endl;
   X509_gmtime_adj(X509_get_notBefore(cert), 0);
-  std::cout << "createCert 7.2" << std::endl;
   X509_gmtime_adj(X509_get_notAfter(cert), duration);
-  std::cout << "createCert 7.3" << std::endl;
   ret = X509_set_pubkey(cert, privkey);
   assert(ret);
-  std::cout << "createCert 8" << std::endl;
   std::string subjectAltNameStr = std::string("URI:sip:") + aor
                                   + std::string(",URI:im:") + aor
                                   + std::string(",URI:pres:") + aor;
@@ -206,7 +195,6 @@ int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCe
 
     ret = X509_sign(cert, privkey, EVP_sha1());
     assert(ret);
-    std::cout << "createCert 9" << std::endl;
     outCert = cert;
     outKey = privkey;
     return ret;
@@ -220,7 +208,7 @@ int createCert(const std::string& pAor, int expireDays, int keyLen, X509*& outCe
 
     ELOG_DEBUG("Creating Dtls factory, Openssl v %s", OPENSSL_VERSION_TEXT);
 
-    mContext = SSL_CTX_new(DTLSv1_method());
+    mContext = SSL_CTX_new(DTLSv1_2_client_method());
     assert(mContext);
 
     int r = SSL_CTX_use_certificate(mContext, mCert);
